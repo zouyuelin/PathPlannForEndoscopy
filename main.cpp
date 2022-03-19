@@ -44,6 +44,7 @@
 #include <vtkParametricFunctionSource.h>
 #include <itkImageSeriesReader.h>
 #include <itkImage.h>
+#include <vtkDecimatePro.h>
 
 #include "interactorStyleCenterline.h"
 #include "Centerline.h"
