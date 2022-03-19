@@ -70,8 +70,6 @@ int main(int argc,char**argv)
         return -1;
     }
     string stl_path = argv[1];
-    // /home/zyl/ubuntu/VTK/VMTK/vmtk-1.4.0/example/Vessel-Centerline-Extraction/test_data/left/lumen.stl
-    // /home/zyl/ubuntu/VTK/CT_LungAndAbdominal/stl/lung.stl
 
     vtkSmartPointer<vtkPolyData> inputSurface = vtkSmartPointer<vtkPolyData>::New();
     vtkSmartPointer<vtkPolyData> cappedSurface = vtkSmartPointer<vtkPolyData>::New();
@@ -126,22 +124,40 @@ void ExtractCenterline(string surfacePath, vtkPolyData* inputSurface, vtkPolyDat
         capper->SetInputData(inputSurface);
         capper->Update();
 
+        //清理
         vtkSmartPointer<vtkCleanPolyData> cleaner = vtkSmartPointer<vtkCleanPolyData>::New();
         cleaner->SetInputData(capper->GetOutput());
         cleaner->Update();
 
+        //三角化
         vtkSmartPointer<vtkTriangleFilter> triangulator = vtkSmartPointer<vtkTriangleFilter>::New();
         triangulator->SetInputData(cleaner->GetOutput());
         triangulator->PassLinesOff();
         triangulator->PassVertsOff();
         triangulator->Update();
 
-        cappedSurface->DeepCopy(triangulator->GetOutput());
+        int numberOfPolys = triangulator->GetOutput()->GetNumberOfPolys();
+//        std::cout << "There are " << triangulator->GetOutput()->GetNumberOfPolys() << " polygons." << std::endl;
 
-        cout<<"The number of the lumen is:" <<capper->GetCapCenterIds()->GetNumberOfIds()<<endl;
+        //如果 poly number 不超过 3e4，不需要数据抽取
+        if(numberOfPolys < 30000)
+            cappedSurface->DeepCopy(triangulator->GetOutput());
+        else
+        {
+            //三角数据减少 (1-3e4/numberOfPolys)*100% ，加快计算
+            vtkSmartPointer<vtkDecimatePro> decimate = vtkSmartPointer<vtkDecimatePro>::New();
+            decimate->SetInputConnection(triangulator->GetOutputPort());
+            decimate->SetTargetReduction(1 - 3e4/(float)numberOfPolys );    //0.95
+            decimate->PreserveTopologyOn();
+            decimate->Update();
+
+            cappedSurface->DeepCopy(decimate->GetOutput());
+        }
+
+        cout<<"The number of the holes is:" <<capper->GetCapCenterIds()->GetNumberOfIds()<<endl;
 
         vtkSmartPointer<vtkPolyDataMapper> surfaceMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-        surfaceMapper->SetInputData(cappedSurface);
+        surfaceMapper->SetInputData(triangulator->GetOutput());
         vtkSmartPointer<vtkActor> surfaceActor = vtkSmartPointer<vtkActor>::New();
         surfaceActor->SetMapper(surfaceMapper);
 
