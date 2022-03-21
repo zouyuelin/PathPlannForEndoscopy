@@ -314,7 +314,7 @@ void MouseInteractorStyleCenterline::Roaming()
 
             aCamera->SetPosition ( lastPosition[0], lastPosition[1], lastPosition[2] );
             aCamera->SetFocalPoint( focalPoint[0], focalPoint[1], focalPoint[2] );
-            aCamera->SetViewUp ( 0, -1, 0);
+            //aCamera->SetViewUp ( 0, -1, 0);
             aCamera->ComputeViewPlaneNormal();
             //It is important to reset the camera clipping range.
             this->CurrentRenderer->ResetCameraClippingRange();
