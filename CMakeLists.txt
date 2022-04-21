@@ -15,7 +15,7 @@ include(${VMTK_USE_FILE})
 find_package( ITK REQUIRED)
 include(${ITK_USE_FILE})
 # VTK
-find_package( VTK 8.1.2 EXACT REQUIRED)
+find_package( VTK 8.1.2 REQUIRED)
 include(${VTK_USE_FILE})
 
 set(source main.cpp Centerline.cpp interactorStyleCenterline.cpp)
